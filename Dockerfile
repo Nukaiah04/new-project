@@ -1,34 +1,36 @@
-# -------------------------------
-# Stage 1: Build Flutter Web App
-# -------------------------------
-FROM cirrusci/flutter:stable AS build
+# -------- BUILD STAGE --------
+FROM debian:bullseye-slim AS build
 
+# Install required packages
+RUN apt-get update && apt-get install -y \
+    curl git unzip xz-utils ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Flutter
+RUN git clone https://github.com/flutter/flutter.git /flutter
+ENV PATH="/flutter/bin:/flutter/bin/cache/dart-sdk/bin:${PATH}"
+
+# Enable web
+RUN flutter doctor
+RUN flutter config --enable-web
+
+# Set working directory
 WORKDIR /app
 
-# Copy files
-COPY pubspec.yaml pubspec.lock ./
-RUN flutter pub get
-
+# Copy source code
 COPY . .
 
-# Build web app
-RUN flutter build web --release
+# Get dependencies & build web
+RUN flutter pub get
+RUN flutter build web
 
-# -------------------------------
-# Stage 2: Serve with Nginx
-# -------------------------------
+# -------- RUNTIME STAGE --------
 FROM nginx:alpine
 
-# Remove default nginx config
-RUN rm /etc/nginx/conf.d/default.conf
-
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Copy build output
+# Copy Flutter web build to nginx
 COPY --from=build /app/build/web /usr/share/nginx/html
 
+# Expose port
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
-

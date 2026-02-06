@@ -1,11 +1,3 @@
-name: Flutter CI Pipeline
-
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -14,6 +6,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 👇 ADD THIS DEBUG STEP HERE
+      - name: Debug files
+        run: ls -la
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -21,10 +17,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build Docker image
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/flutter-web:latest
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/flutter-web:latest .
 
       - name: Push Docker image
-        run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/flutter-web:latest
-
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/flutter-web:latest
