@@ -5,13 +5,14 @@ FROM cirrusci/flutter:stable AS build
 
 WORKDIR /app
 
-# Copy files
+# Copy dependency files first (cache optimization)
 COPY pubspec.yaml pubspec.lock ./
 RUN flutter pub get
 
+# Copy remaining source code
 COPY . .
 
-# Build web app
+# Build Flutter web app
 RUN flutter build web --release
 
 # -------------------------------
@@ -25,10 +26,9 @@ RUN rm /etc/nginx/conf.d/default.conf
 # Copy custom nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy build output
+# Copy build output to nginx
 COPY --from=build /app/build/web /usr/share/nginx/html
 
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
-
