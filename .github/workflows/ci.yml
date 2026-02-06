@@ -22,9 +22,8 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/flutter-web:latest
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/flutter-web:latest .
 
       - name: Push Docker image
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/flutter-web:latest
-
